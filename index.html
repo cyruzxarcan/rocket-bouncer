@@ -24,6 +24,9 @@
     }
     canvas {
       display: block;
+      /* Forces Hardware/GPU Acceleration on weak phones */
+      transform: translateZ(0);
+      will-change: transform;
     }
     #message-container {
       position: absolute;
@@ -48,7 +51,7 @@
 </head>
 <body>
   <div id="message-container">
-    <div class="title" id="main-text">LOADING CAMERA...</div>
+    <div class="title" id="main-text">LOADING AI...</div>
     <div class="subtitle" id="sub-text">(ALLOW ACCESS)</div>
   </div>
   
@@ -59,7 +62,6 @@
     
     let gameState = 'LOADING'; 
     let score = 0;
-    let isChrome = false;
     
     let ball = { x: 0, y: 0, vx: 0, vy: 0, radius: 25 };
     let nose = { x: -100, y: -100, radius: 25 };
@@ -68,12 +70,14 @@
     let scaleF = 1, offX = 0, offY = 0;
 
     function setup() {
-      // Prevents hidden Retina/High-DPI pixel quadrupling
+      // MASSIVE OPTIMIZATIONS
       pixelDensity(1); 
+      frameRate(30); // Cuts CPU load strictly in half!
 
+      // Quick Chrome check
       let userAgent = navigator.userAgent;
       let vendor = navigator.vendor;
-      isChrome = (/Chrome/.test(userAgent) && /Google Inc/.test(vendor)) || userAgent.match("CriOS");
+      let isChrome = (/Chrome/.test(userAgent) && /Google Inc/.test(vendor)) || userAgent.match("CriOS");
 
       if (!isChrome) {
         gameState = 'BLOCKED';
@@ -86,14 +90,12 @@
 
       createCanvas(windowWidth, windowHeight);
       
-      // EXTREME OPTIMIZATION 1: Force a tiny 320x240 video feed. 
-      // The AI processes 90% fewer pixels, practically eliminating lag.
+      // EXTREME CAMERA OPTIMIZATION: 240p
       video = createCapture({ 
         audio: false, 
         video: { 
           facingMode: "user",
-          width: { ideal: 320 }, 
-          height: { ideal: 240 }
+          width: { ideal: 240 }, // Extremely low resolution
         } 
       });
       video.hide(); 
@@ -103,20 +105,14 @@
         resetGame();
       };
 
-      // EXTREME OPTIMIZATION 2: Tell AI to skip heavy math for eyes/lips
-      const faceOptions = {
-        maxFaces: 1,
-        refineLandmarks: false // We only need the nose!
-      };
-
-      facemesh = ml5.facemesh(video, faceOptions, () => {
+      // Lightweight AI settings
+      facemesh = ml5.facemesh(video, { maxFaces: 1, refineLandmarks: false }, () => {
         document.getElementById('message-container').style.display = 'none';
         gameState = 'ALIGN';
       });
       
       facemesh.on('predict', results => { predictions = results; });
       textAlign(CENTER, CENTER);
-      noStroke(); // Turn off stroke calculations globally
     }
 
     function calculateVideoScale() {
@@ -136,6 +132,15 @@
       calculateVideoScale();
     }
 
+    // Helper to draw text with a cheap fake shadow instead of full-screen alpha box
+    function drawShadowText(txt, x, y, size, col) {
+      textSize(size);
+      fill(0); // Black shadow
+      text(txt, x + 2, y + 2);
+      fill(col); // Actual color
+      text(txt, x, y);
+    }
+
     function draw() {
       if (gameState === 'LOADING' || gameState === 'BLOCKED') return;
 
@@ -144,29 +149,21 @@
       push();
       translate(width, 0);
       scale(-1, 1);
-      // Because the video is now 320p, it might look slightly pixelated, 
-      // but it will be buttery smooth!
       image(video, offX, offY, vW * scaleF, vH * scaleF);
       pop();
 
-      fill(0, 0, 0, 80);
-      rect(0, 0, width, height);
+      // Removed the full screen alpha rect here to save massive GPU processing
 
       if (predictions.length > 0) {
         let n = predictions[0].annotations.noseTip[0];
-        
         let screenX = n[0] * scaleF + offX;
         let screenY = n[1] * scaleF + offY;
-        let targetX = width - screenX; 
         
-        // Increased lerp speed slightly (0.5 to 0.6) to keep it snappy
-        nose.x = lerp(nose.x, targetX, 0.6); 
-        nose.y = lerp(nose.y, screenY, 0.6);
+        // Since we are at 30fps, we must snap to the nose faster (0.8 instead of 0.6)
+        nose.x = lerp(nose.x, width - screenX, 0.8); 
+        nose.y = lerp(nose.y, screenY, 0.8);
       }
       
-      fill(0, 255, 0, 15); 
-      ellipse(nose.x, nose.y, nose.radius * 2);
-
       // --- STATE: ALIGN ---
       if (gameState === 'ALIGN') {
         let targetX = width / 2;
@@ -175,25 +172,22 @@
         let isAligned = d < 60;
 
         strokeWeight(4);
-        let ringColor = lerpColor(color(255, 255, 255, 100), color(0, 255, 100), isAligned ? 1 : map(d, 0, 200, 1, 0));
-        stroke(ringColor);
+        stroke(isAligned ? color(0, 255, 100) : color(255));
         noFill();
         ellipse(targetX, targetY, 120);
         
         noStroke();
-        fill(255);
-        textSize(26);
         if (isAligned) {
-          fill(0, 255, 100);
-          text("TAP TO START", width/2, height/2 + 100);
+          drawShadowText("TAP TO START", width/2, height/2 + 100, 26, color(0, 255, 100));
         } else {
-          text("ALIGN NOSE TO START", width/2, height/2 + 100);
+          drawShadowText("ALIGN NOSE TO START", width/2, height/2 + 100, 26, color(255));
         }
       } 
       
       // --- STATE: PLAYING ---
       else if (gameState === 'PLAYING') {
-        ball.vy += 0.15; 
+        // Physics tuned for 30 FPS (everything moves slightly more per frame)
+        ball.vy += 0.35; 
         ball.x += ball.vx;
         ball.y += ball.vy;
 
@@ -202,16 +196,15 @@
 
         let d = dist(ball.x, ball.y, nose.x, nose.y);
         if (d < ball.radius + nose.radius && ball.vy > 0) {
-          ball.vy = -7; 
-          ball.vx = map(ball.x - nose.x, -nose.radius, nose.radius, -4, 4); 
+          ball.vy = -12; // Stronger bounce needed for 30fps
+          ball.vx = map(ball.x - nose.x, -nose.radius, nose.radius, -8, 8); 
           score++;
         }
 
         drawOptimizedRocketBadge(ball.x, ball.y, ball.radius);
 
-        fill(255, 200); 
-        textSize(72);
-        text(score, width/2, 100); 
+        noStroke();
+        drawShadowText(score, width/2, 100, 72, color(255)); 
 
         if (ball.y > height + ball.radius * 2) {
           gameState = 'GAMEOVER';
@@ -220,17 +213,10 @@
       
       // --- STATE: GAMEOVER ---
       else if (gameState === 'GAMEOVER') {
-        fill(255, 50, 50);
-        textSize(44);
-        text("GAME OVER", width/2, height/2 - 50);
-        
-        fill(255);
-        textSize(30);
-        text("SCORE: " + score, width/2, height/2);
-        
-        fill(200);
-        textSize(22);
-        text("TAP TO RESTART", width/2, height/2 + 60);
+        noStroke();
+        drawShadowText("GAME OVER", width/2, height/2 - 50, 44, color(255, 50, 50));
+        drawShadowText("SCORE: " + score, width/2, height/2, 30, color(255));
+        drawShadowText("TAP TO RESTART", width/2, height/2 + 60, 22, color(200));
       }
     }
 
@@ -239,6 +225,7 @@
       translate(x, y);
       scale(radius/20); 
 
+      noStroke();
       fill(200, 200, 210); 
       beginShape();
       vertex(0, -20);
@@ -290,7 +277,7 @@
       score = 0;
       ball.x = width / 2;
       ball.y = height / 4; 
-      ball.vx = random(-2, 2); 
+      ball.vx = random(-4, 4); 
       ball.vy = 0;
     }
   </script>
