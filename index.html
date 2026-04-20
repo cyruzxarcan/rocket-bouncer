@@ -1,0 +1,322 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.7">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="en"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;title&gt;Rocket Nose Bounce&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>body {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>margin: 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>padding: 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background-color: #111;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>justify-content: center;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>align-items: center;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>height: 100vh;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>overflow: hidden;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>color: white;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-family: 'Courier New', Courier, monospace;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>canvas {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>border-radius: 15px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>max-width: 100vw;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>max-height: 100vh;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>object-fit: contain;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>#message-container {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>position: absolute;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>text-align: center;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>z-index: 10;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>padding: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background: rgba(0,0,0,0.8);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>border-radius: 10px;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.title {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-size: 28px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-weight: bold;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>margin-bottom: 10px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>letter-spacing: 2px;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.subtitle {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-size: 16px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-weight: normal;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>color: #aaa;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="message-container"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="title" id="main-text"&gt;LOADING CAMERA...&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="subtitle" id="sub-text"&gt;(ALLOW ACCESS)&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let video;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let facemesh;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let predictions = [];</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// Game states</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let gameState = 'LOADING';<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>let score = 0;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let isChrome = false;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// Game objects</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let ball = { x: 0, y: 0, vx: 0, vy: 0, radius: 25 };</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let nose = { x: -100, y: -100, radius: 25 };</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let ballParticles = [];<span class="Apple-converted-space"> </span></p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function setup() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>// Chrome Check</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let userAgent = navigator.userAgent;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let vendor = navigator.vendor;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>isChrome = (/Chrome/.test(userAgent) &amp;&amp; /Google Inc/.test(vendor)) || userAgent.match("CriOS");</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (!isChrome) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>gameState = 'BLOCKED';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('main-text').innerText = "CHROME REQUIRED";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('main-text').style.color = "#ff5555";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('sub-text').innerText = "OPEN IN GOOGLE CHROME TO PLAY.";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>noCanvas();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>return;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>createCanvas(windowWidth, windowHeight);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>video = createCapture({ audio: false, video: { facingMode: "user" } });</p>
+<p class="p1"><span class="Apple-converted-space">      </span>video.hide();<span class="Apple-converted-space"> </span></p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// Fix for drift, setting canvas to video's raw dimensions</p>
+<p class="p1"><span class="Apple-converted-space">      </span>video.elt.onloadedmetadata = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>resizeCanvas(video.elt.videoWidth, video.elt.videoHeight);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>resetGame();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>facemesh = ml5.facemesh(video, () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('message-container').style.display = 'none';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>gameState = 'ALIGN';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>facemesh.on('predict', results =&gt; { predictions = results; });</p>
+<p class="p1"><span class="Apple-converted-space">      </span>textAlign(CENTER, CENTER);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function draw() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (gameState === 'LOADING' || gameState === 'BLOCKED') return;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>background(20);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// 1. Mirrored video background (No blue filter, natural color)</p>
+<p class="p1"><span class="Apple-converted-space">      </span>push();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>translate(width, 0);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>scale(-1, 1);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>// Removed the tint completely for full natural color</p>
+<p class="p1"><span class="Apple-converted-space">      </span>image(video, 0, 0, width, height);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>pop();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// Add a very faint dark overlay just so white text remains readable<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// over bright camera feeds, without shifting the color.</p>
+<p class="p1"><span class="Apple-converted-space">      </span>fill(0, 0, 0, 60);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>rect(0, 0, width, height);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// 2. Update and draw the Nose Tracker (Subtle)</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (predictions.length &gt; 0) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let n = predictions[0].annotations.noseTip[0];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>nose.x = lerp(nose.x, width - n[0], 0.5);<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>nose.y = lerp(nose.y, n[1], 0.5);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// Draw very faint tracker (subtle feedback)</p>
+<p class="p1"><span class="Apple-converted-space">      </span>noStroke();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>fill(0, 255, 0, 15);<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>ellipse(nose.x, nose.y, nose.radius * 2);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// --- STATE: ALIGN ---</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (gameState === 'ALIGN') {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let targetX = width / 2;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let targetY = height / 2;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let d = dist(nose.x, nose.y, targetX, targetY);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let isAligned = d &lt; 60;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>noFill();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>strokeWeight(4);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let ringColor = lerpColor(color(255, 255, 255, 100), color(0, 255, 100), isAligned ? 1 : map(d, 0, 200, 1, 0));</p>
+<p class="p1"><span class="Apple-converted-space">        </span>stroke(ringColor);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>ellipse(targetX, targetY, 120);</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>noStroke();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>fill(255);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>textSize(26);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (isAligned) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>fill(0, 255, 100);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>text("TAP TO START", width/2, height/2 + 100);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>text("ALIGN NOSE TO START", width/2, height/2 + 100);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}<span class="Apple-converted-space"> </span></p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// --- STATE: PLAYING ---</p>
+<p class="p1"><span class="Apple-converted-space">      </span>else if (gameState === 'PLAYING') {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- UPDATED PHYSICS: Slower and floatier ---</p>
+<p class="p1"><span class="Apple-converted-space">        </span>ball.vy += 0.15; // Much lower gravity for a realistic, slower arc</p>
+<p class="p1"><span class="Apple-converted-space">        </span>ball.x += ball.vx;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>ball.y += ball.vy;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Wall collisions</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (ball.x &lt; ball.radius) { ball.x = ball.radius; ball.vx *= -0.8; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (ball.x &gt; width - ball.radius) { ball.x = width - ball.radius; ball.vx *= -0.8; }</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>let d = dist(ball.x, ball.y, nose.x, nose.y);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (d &lt; ball.radius + nose.radius &amp;&amp; ball.vy &gt; 0) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>ball.vy = -7; // Softer upward bounce velocity</p>
+<p class="p1"><span class="Apple-converted-space">          </span>ball.vx = map(ball.x - nose.x, -nose.radius, nose.radius, -4, 4); // Softer horizontal spin</p>
+<p class="p1"><span class="Apple-converted-space">          </span>score++;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Draw Badge</p>
+<p class="p1"><span class="Apple-converted-space">        </span>drawRocketBadge(ball.x, ball.y, ball.radius);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Score display</p>
+<p class="p1"><span class="Apple-converted-space">        </span>noStroke();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>fill(255, 180);<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>textSize(64);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>text(score, width/2, 80);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (ball.y &gt; height + ball.radius * 2) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>gameState = 'GAMEOVER';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}<span class="Apple-converted-space"> </span></p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// --- STATE: GAMEOVER ---</p>
+<p class="p1"><span class="Apple-converted-space">      </span>else if (gameState === 'GAMEOVER') {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>noStroke();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>fill(255, 50, 50);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>textSize(44);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>text("GAME OVER", width/2, height/2 - 50);</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>fill(255);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>textSize(30);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>text("SCORE: " + score, width/2, height/2);</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>fill(200);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>textSize(22);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>text("TAP TO RESTART", width/2, height/2 + 60);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function drawRocketBadge(x, y, radius) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>push();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>translate(x, y);</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>if(ball.vy &gt; 1) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>ballParticles.push({x: random(-radius/2, radius/2), y: radius/2, a: 150});</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>for(let i = ballParticles.length - 1; i &gt;= 0; i--) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>let p = ballParticles[i];</p>
+<p class="p1"><span class="Apple-converted-space">          </span>fill(255, 150, 100, p.a);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>noStroke();</p>
+<p class="p1"><span class="Apple-converted-space">          </span>ellipse(p.x, p.y + p.a/10, random(5, 10));<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>p.a -= 10;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>p.y += 1.5; // Smoother particle movement</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if(p.a &lt;= 0) ballParticles.splice(i, 1);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>scale(radius/20);<span class="Apple-converted-space"> </span></p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// 1. Shield/Badge Background</p>
+<p class="p1"><span class="Apple-converted-space">      </span>noStroke();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>fill(220, 220, 230);<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>beginShape();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>vertex(0, -20);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>vertex(18, -15);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>vertex(20, 10);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>vertex(0, 25);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>vertex(-20, 10);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>vertex(-18, -15);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>endShape(CLOSE);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>fill(180, 180, 190);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>beginShape();<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>vertex(0, -15);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>vertex(14, -10);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>vertex(15, 8);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>vertex(0, 20);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>vertex(-15, 8);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>vertex(-14, -10);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>endShape(CLOSE);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// 2. The Rocket Symbol</p>
+<p class="p1"><span class="Apple-converted-space">      </span>// Fins</p>
+<p class="p1"><span class="Apple-converted-space">      </span>fill(50);<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>triangle(-10, 5, -18, 18, -6, 12);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>triangle(10, 5, 18, 18, 6, 12);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// Body</p>
+<p class="p1"><span class="Apple-converted-space">      </span>fill(200, 50, 50);<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>beginShape();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>vertex(-6, 12);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>vertex(-6, -10);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>bezierVertex(-6,-20, 0, -25, 0, -25);<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>bezierVertex(0,-25, 6, -20, 6, -10);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>vertex(6, 12);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>endShape(CLOSE);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// Flames/Flickering Fire</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (gameState === 'PLAYING') {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>fill(255, 150 + random(105), random(100));<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>let fireY = 12 + random(5, 15);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>ellipse(0, 15, 10, fireY);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>ellipse(-3, 13, 6, fireY/1.5);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>ellipse(3, 13, 6, fireY/1.5);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// Port hole</p>
+<p class="p1"><span class="Apple-converted-space">      </span>fill(100, 200, 255, 150);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>stroke(255, 200);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>strokeWeight(1);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>ellipse(0, -5, 8, 8);</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>pop();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function mousePressed() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (gameState === 'BLOCKED') return false;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (gameState === 'ALIGN') {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (dist(nose.x, nose.y, width/2, height/2) &lt; 60) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>resetGame();</p>
+<p class="p1"><span class="Apple-converted-space">          </span>gameState = 'PLAYING';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} else if (gameState === 'GAMEOVER') {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>ballParticles = [];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>gameState = 'ALIGN';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return false;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function resetGame() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>score = 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>ball.x = width / 2;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>ball.y = height / 4;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>ball.vx = random(-2, 2); // Slower initial horizontal speed</p>
+<p class="p1"><span class="Apple-converted-space">      </span>ball.vy = 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>ballParticles = [];</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
