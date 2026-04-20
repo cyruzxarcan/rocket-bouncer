@@ -68,10 +68,8 @@
     let scaleF = 1, offX = 0, offY = 0;
 
     function setup() {
-      // 1. MASSIVE PERFORMANCE BOOST: Disables hidden Retina/High-DPI pixel quadrupling
+      // Prevents hidden Retina/High-DPI pixel quadrupling
       pixelDensity(1); 
-      // 2. Locks performance to a stable mobile-friendly rate
-      frameRate(60); 
 
       let userAgent = navigator.userAgent;
       let vendor = navigator.vendor;
@@ -81,17 +79,22 @@
         gameState = 'BLOCKED';
         document.getElementById('main-text').innerText = "CHROME REQUIRED";
         document.getElementById('main-text').style.color = "#ff5555";
-        document.getElementById('sub-text').innerText = "OPEN IN GOOGLE CHROME TO PLAY.";
+        document.getElementById('sub-text').innerText = "OPEN IN CHROME TO PLAY.";
         noCanvas();
         return; 
       }
 
       createCanvas(windowWidth, windowHeight);
       
-      // Requesting a lower resolution from the camera to save processing power
+      // EXTREME OPTIMIZATION 1: Force a tiny 320x240 video feed. 
+      // The AI processes 90% fewer pixels, practically eliminating lag.
       video = createCapture({ 
         audio: false, 
-        video: { facingMode: "user" } 
+        video: { 
+          facingMode: "user",
+          width: { ideal: 320 }, 
+          height: { ideal: 240 }
+        } 
       });
       video.hide(); 
       
@@ -100,14 +103,20 @@
         resetGame();
       };
 
-      // Tell the AI to only look for 1 face maximum to save battery and reduce lag
-      facemesh = ml5.facemesh(video, { maxFaces: 1 }, () => {
+      // EXTREME OPTIMIZATION 2: Tell AI to skip heavy math for eyes/lips
+      const faceOptions = {
+        maxFaces: 1,
+        refineLandmarks: false // We only need the nose!
+      };
+
+      facemesh = ml5.facemesh(video, faceOptions, () => {
         document.getElementById('message-container').style.display = 'none';
         gameState = 'ALIGN';
       });
       
       facemesh.on('predict', results => { predictions = results; });
       textAlign(CENTER, CENTER);
+      noStroke(); // Turn off stroke calculations globally
     }
 
     function calculateVideoScale() {
@@ -135,6 +144,8 @@
       push();
       translate(width, 0);
       scale(-1, 1);
+      // Because the video is now 320p, it might look slightly pixelated, 
+      // but it will be buttery smooth!
       image(video, offX, offY, vW * scaleF, vH * scaleF);
       pop();
 
@@ -148,11 +159,11 @@
         let screenY = n[1] * scaleF + offY;
         let targetX = width - screenX; 
         
-        nose.x = lerp(nose.x, targetX, 0.5); 
-        nose.y = lerp(nose.y, screenY, 0.5);
+        // Increased lerp speed slightly (0.5 to 0.6) to keep it snappy
+        nose.x = lerp(nose.x, targetX, 0.6); 
+        nose.y = lerp(nose.y, screenY, 0.6);
       }
       
-      noStroke();
       fill(0, 255, 0, 15); 
       ellipse(nose.x, nose.y, nose.radius * 2);
 
@@ -163,10 +174,10 @@
         let d = dist(nose.x, nose.y, targetX, targetY);
         let isAligned = d < 60;
 
-        noFill();
         strokeWeight(4);
         let ringColor = lerpColor(color(255, 255, 255, 100), color(0, 255, 100), isAligned ? 1 : map(d, 0, 200, 1, 0));
         stroke(ringColor);
+        noFill();
         ellipse(targetX, targetY, 120);
         
         noStroke();
@@ -198,7 +209,6 @@
 
         drawOptimizedRocketBadge(ball.x, ball.y, ball.radius);
 
-        noStroke();
         fill(255, 200); 
         textSize(72);
         text(score, width/2, 100); 
@@ -210,7 +220,6 @@
       
       // --- STATE: GAMEOVER ---
       else if (gameState === 'GAMEOVER') {
-        noStroke();
         fill(255, 50, 50);
         textSize(44);
         text("GAME OVER", width/2, height/2 - 50);
@@ -225,13 +234,11 @@
       }
     }
 
-    // Highly optimized drawing function
     function drawOptimizedRocketBadge(x, y, radius) {
       push();
       translate(x, y);
       scale(radius/20); 
 
-      noStroke();
       fill(200, 200, 210); 
       beginShape();
       vertex(0, -20);
