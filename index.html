@@ -2,33 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Rocket Nose Bounce</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
   <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
   <style>
-    body {
+    /* Locks the screen to prevent Chrome address bar bouncing and pull-to-refresh */
+    html, body {
       margin: 0;
       padding: 0;
+      width: 100%;
+      height: 100%;
       background-color: #000;
+      overflow: hidden;
+      position: fixed; 
+      touch-action: none; 
+      color: white;
+      font-family: 'Courier New', Courier, monospace;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      width: 100vw;
-      overflow: hidden;
-      color: white;
-      font-family: 'Courier New', Courier, monospace;
     }
-    /* Updated to force a full-screen mobile aspect ratio (9:16) without black bars */
     canvas {
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover; 
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 1;
+      display: block;
     }
     #message-container {
       position: absolute;
@@ -48,14 +44,6 @@
       font-size: 16px;
       font-weight: normal;
       color: #aaa;
-    }
-    /* Keeps UI text above the canvas */
-    #ui-layer {
-      position: absolute;
-      z-index: 5;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
     }
   </style>
 </head>
@@ -79,6 +67,10 @@
     let ball = { x: 0, y: 0, vx: 0, vy: 0, radius: 25 };
     let nose = { x: -100, y: -100, radius: 25 };
 
+    // Math variables to keep the AI perfectly aligned with the screen
+    let vW = 0, vH = 0;
+    let scaleF = 1, offX = 0, offY = 0;
+
     function setup() {
       // Chrome Check
       let userAgent = navigator.userAgent;
@@ -94,13 +86,14 @@
         return; 
       }
 
+      // Create a canvas that fills the exact pixels of the phone screen
       createCanvas(windowWidth, windowHeight);
       video = createCapture({ audio: false, video: { facingMode: "user" } });
       video.hide(); 
       
-      // Fix for drift: Canvas internal resolution strictly matches camera resolution
+      // Calculate how to scale and crop the video to fill the screen
       video.elt.onloadedmetadata = () => {
-        resizeCanvas(video.elt.videoWidth, video.elt.videoHeight);
+        calculateVideoScale();
         resetGame();
       };
 
@@ -113,27 +106,53 @@
       textAlign(CENTER, CENTER);
     }
 
+    // Calculates the math needed to stretch the video WITHOUT misaligning the tracking
+    function calculateVideoScale() {
+      if (video.elt.videoWidth > 0) {
+        vW = video.elt.videoWidth;
+        vH = video.elt.videoHeight;
+        let scaleX = width / vW;
+        let scaleY = height / vH;
+        scaleF = Math.max(scaleX, scaleY); // Cover the screen
+        offX = (width - vW * scaleF) / 2;
+        offY = (height - vH * scaleF) / 2;
+      }
+    }
+
+    function windowResized() {
+      resizeCanvas(windowWidth, windowHeight);
+      calculateVideoScale();
+    }
+
     function draw() {
       if (gameState === 'LOADING' || gameState === 'BLOCKED') return;
 
       background(20);
 
-      // 1. Mirrored video background
+      // 1. Draw the perfectly scaled and centered video
       push();
       translate(width, 0);
       scale(-1, 1);
-      image(video, 0, 0, width, height);
+      image(video, offX, offY, vW * scaleF, vH * scaleF);
       pop();
 
       // Faint dark overlay for readability
       fill(0, 0, 0, 80);
       rect(0, 0, width, height);
 
-      // 2. Update Nose Tracker
+      // 2. Update Nose Tracker with the new Screen Math
       if (predictions.length > 0) {
         let n = predictions[0].annotations.noseTip[0];
-        nose.x = lerp(nose.x, width - n[0], 0.5); 
-        nose.y = lerp(nose.y, n[1], 0.5);
+        
+        // Map raw AI coordinates to our scaled/cropped screen coordinates
+        let screenX = n[0] * scaleF + offX;
+        let screenY = n[1] * scaleF + offY;
+        
+        // Mirror the X coordinate for the selfie camera
+        let targetX = width - screenX; 
+        
+        nose.x = lerp(nose.x, targetX, 0.5); 
+        nose.y = lerp(nose.y, screenY, 0.5);
       }
       
       // Draw faint tracker
@@ -176,6 +195,7 @@
         if (ball.x < ball.radius) { ball.x = ball.radius; ball.vx *= -0.8; }
         if (ball.x > width - ball.radius) { ball.x = width - ball.radius; ball.vx *= -0.8; }
 
+        // Collision logic
         let d = dist(ball.x, ball.y, nose.x, nose.y);
         if (d < ball.radius + nose.radius && ball.vy > 0) {
           ball.vy = -7; 
@@ -183,14 +203,12 @@
           score++;
         }
 
-        // Draw Optimized Badge
         drawOptimizedRocketBadge(ball.x, ball.y, ball.radius);
 
-        // Score display
         noStroke();
         fill(255, 200); 
         textSize(72);
-        text(score, width/2, 100); // Pushed down slightly for taller screens
+        text(score, width/2, 100); 
 
         if (ball.y > height + ball.radius * 2) {
           gameState = 'GAMEOVER';
@@ -214,13 +232,12 @@
       }
     }
 
-    // Highly optimized drawing function (No particles, static flame)
     function drawOptimizedRocketBadge(x, y, radius) {
       push();
       translate(x, y);
       scale(radius/20); 
 
-      // 1. Single Shield Background (Removed double layer)
+      // Background Shield
       noStroke();
       fill(200, 200, 210); 
       beginShape();
@@ -232,8 +249,7 @@
       vertex(-16, -15);
       endShape(CLOSE);
 
-      // 2. The Rocket Symbol
-      // Static Fins
+      // Rocket Fins
       fill(50); 
       triangle(-10, 5, -18, 18, -6, 12);
       triangle(10, 5, 18, 18, 6, 12);
@@ -248,9 +264,9 @@
       vertex(6, 12);
       endShape(CLOSE);
 
-      // Static Flame (No random calculations)
+      // Static Flame
       if (gameState === 'PLAYING') {
-          fill(255, 150, 0); // Solid orange
+          fill(255, 150, 0); 
           triangle(-4, 12, 4, 12, 0, 22);
       }
       
